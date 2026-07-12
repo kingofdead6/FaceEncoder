@@ -70,7 +70,11 @@ export function useStream(enabled, onStats) {
           try {
             const message = JSON.parse(event.data);
             if (message.type === "stats") onStatsRef.current?.(message);
-            if (message.type === "error") setWsState("error");
+            if (message.type === "error") {
+              sending = false;
+              setWsState("error");
+              captureTimer = setTimeout(sendFrame, 1000);
+            }
           } catch {
             // Ignore malformed control messages.
           }
@@ -83,6 +87,7 @@ export function useStream(enabled, onStats) {
         else URL.revokeObjectURL(url);
         if (previous) setTimeout(() => URL.revokeObjectURL(previous), 300);
         sending = false;
+        setWsState("open");
         scheduleFrame();
       };
       ws.onerror = () => ws?.close();

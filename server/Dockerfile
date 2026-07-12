@@ -18,6 +18,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY app ./app
+COPY models ./models
 
 EXPOSE 8000
 

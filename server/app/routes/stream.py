@@ -32,6 +32,12 @@ async def websocket_stream(ws: WebSocket) -> None:
             except FrameError as exc:
                 await ws.send_text(json.dumps({"type": "error", "detail": str(exc)}))
                 continue
+            except Exception as exc:  # Surface model/runtime failures to the browser and logs.
+                log.exception("Frame processing failed")
+                await ws.send_text(
+                    json.dumps({"type": "error", "detail": f"Frame processing failed: {exc}"})
+                )
+                continue
             await ws.send_bytes(processed)
             await ws.send_text(json.dumps({"type": "stats", **stats}))
     except WebSocketDisconnect:
