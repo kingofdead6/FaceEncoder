@@ -1,5 +1,7 @@
 # ── VisionShield backend ─────────────────────────────────────────────
-# MediaPipe also needs libGLESv2 to load its native vision bindings.
+# MediaPipe's libmediapipe.so links against libGLESv2 + libEGL (+ their
+# libglvnd0/libegl-mesa0 deps, pulled in automatically) even when running
+# CPU-only / headless — ldd libmediapipe.so to re-verify if this changes.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgl1 libgles2 libglib2.0-0 \
+    && apt-get install -y --no-install-recommends libgl1 libgles2 libegl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
