@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from starlette.concurrency import run_in_threadpool
 
 from app.services.camera_service import FrameError, manager
 from app.utils.logger import get_logger
@@ -28,7 +29,10 @@ async def websocket_stream(ws: WebSocket) -> None:
         while True:
             jpeg = await ws.receive_bytes()
             try:
-                processed, stats = manager.process_jpeg(jpeg)
+                # process_jpeg() is CPU-bound (decode + mediapipe + blur + encode);
+                # running it inline would freeze the event loop for every other
+                # request/connection on this worker for the whole frame duration.
+                processed, stats = await run_in_threadpool(manager.process_jpeg, jpeg)
             except FrameError as exc:
                 await ws.send_text(json.dumps({"type": "error", "detail": str(exc)}))
                 continue

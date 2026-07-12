@@ -51,7 +51,7 @@ export function useStream(enabled, onStats) {
           return;
         }
         ws.send(blob);
-      }, "image/jpeg", 0.8);
+      }, "image/jpeg", 0.7);
     };
 
     const connect = () => {
@@ -103,7 +103,10 @@ export function useStream(enabled, onStats) {
     const start = async () => {
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          // Match roughly to the server's process_width (see settings.py) —
+          // capturing/encoding/sending 720p only for the server to downscale
+          // it away wastes client CPU, upload bandwidth, and server decode time.
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
           audio: false,
         });
         if (!alive) {
