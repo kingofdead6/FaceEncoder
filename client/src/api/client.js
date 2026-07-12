@@ -1,10 +1,4 @@
-/**
- * API client.
- *
- * All HTTP calls go through one axios instance. Paths are relative ("/api/..")
- * so the same build works behind the Vite dev proxy, the nginx production
- * proxy, or directly against the backend when VITE_API_URL is set.
- */
+
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
