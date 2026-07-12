@@ -1,11 +1,4 @@
-"""
-VisionShield backend entry point.
-
-Run with either::
-
-    uvicorn app.main:app --reload            # development
-    python -m app.main                       # convenience launcher
-"""
+"""VisionShield backend entry point."""
 
 from __future__ import annotations
 
@@ -16,21 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.config.settings import get_settings
-from app.routes import camera, settings as settings_routes, stats, stream
+from app.routes import settings as settings_routes, stats, stream
 from app.services.camera_service import manager
 from app.utils.logger import get_logger, setup_logging
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: log startup, guarantee camera release on exit."""
+    """Initialise logging and release processor resources on shutdown."""
     cfg = get_settings()
     setup_logging(cfg.log_level)
     log = get_logger("main")
     log.info("%s v%s starting on %s:%d", cfg.app_name, __version__, cfg.host, cfg.port)
     yield
-    manager.stop()
-    log.info("Shutdown complete — camera released")
+    manager.close()
+    log.info("Shutdown complete - processor released")
 
 
 def create_app() -> FastAPI:
@@ -39,11 +32,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=f"{cfg.app_name} API",
         version=__version__,
-        description=(
-            "Real-time AI privacy blur — face & hand privacy modes, nine blur "
-            "algorithms, WebSocket streaming. Interactive docs below; full "
-            "reference in docs/API.md."
-        ),
+        description="Real-time AI privacy blur for browser-supplied video frames.",
         lifespan=lifespan,
     )
     app.add_middleware(
@@ -53,7 +42,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.include_router(camera.router)
     app.include_router(settings_routes.router)
     app.include_router(stats.router)
     app.include_router(stream.router)

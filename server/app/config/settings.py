@@ -40,19 +40,14 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------ #
-    # Camera / capture                                                   #
+    # Browser-frame processing                                           #
     # ------------------------------------------------------------------ #
-    camera_index: int = Field(default=0, description="Default OS camera index.")
-    frame_width: int = Field(default=1280, description="Requested capture width.")
-    frame_height: int = Field(default=720, description="Requested capture height.")
     process_width: int = Field(
         default=960,
         description="Frames are downscaled to this width before processing "
         "(keeps latency low while staying visually sharp).",
     )
-    target_fps: int = Field(default=30, description="Processing loop FPS cap.")
     jpeg_quality: int = Field(default=80, ge=10, le=100, description="JPEG stream quality.")
-    mirror_default: bool = Field(default=True, description="Mirror frames (selfie view).")
 
     # ------------------------------------------------------------------ #
     # Detection (MediaPipe Tasks)                                        #

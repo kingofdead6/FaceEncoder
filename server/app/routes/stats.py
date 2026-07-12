@@ -25,5 +25,5 @@ def health() -> HealthResponse:
         status="ok",
         app=get_settings().app_name,
         version=__version__,
-        camera_running=manager.running,
+        stream_active=manager.running,
     )

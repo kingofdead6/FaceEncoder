@@ -1,24 +1,12 @@
-/**
- * useStream — low-latency WebSocket video consumer.
- *
- * Performance model: the hook never calls setState per frame. Each binary
- * JPEG becomes an object URL written straight onto an <img> DOM node through
- * a ref, so React re-renders zero times at 30–60 FPS. Interleaved JSON text
- * messages carry stats and are forwarded to a callback (kept in a ref so a
- * changing callback identity never tears the socket down).
- *
- * Old object URLs are revoked on a short delay — revoking immediately can
- * abort a frame that is still decoding.
- */
+/** Browser-camera capture and duplex processed-video stream. */
 import { useEffect, useRef, useState } from "react";
 import { streamUrl } from "../api/client";
 
 export function useStream(enabled, onStats) {
+  const videoRef = useRef(null);
   const imgRef = useRef(null);
   const onStatsRef = useRef(onStats);
   onStatsRef.current = onStats;
-
-  // idle | connecting | open | closed
   const [wsState, setWsState] = useState("idle");
 
   useEffect(() => {
@@ -27,78 +15,117 @@ export function useStream(enabled, onStats) {
       return undefined;
     }
 
-    let ws = null;
     let alive = true;
+    let ws = null;
     let retryTimer = null;
+    let captureTimer = null;
+    let mediaStream = null;
     let lastUrl = null;
+    let sending = false;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { alpha: false });
+
+    const scheduleFrame = () => {
+      clearTimeout(captureTimer);
+      captureTimer = setTimeout(sendFrame, 33);
+    };
+
+    const sendFrame = () => {
+      const video = videoRef.current;
+      if (!alive || sending || !video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !ws || ws.readyState !== WebSocket.OPEN) {
+        if (alive && ws?.readyState === WebSocket.OPEN) scheduleFrame();
+        return;
+      }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      if (!canvas.width || !canvas.height) {
+        scheduleFrame();
+        return;
+      }
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      sending = true;
+      canvas.toBlob((blob) => {
+        if (!alive || !blob || !ws || ws.readyState !== WebSocket.OPEN) {
+          sending = false;
+          if (alive) scheduleFrame();
+          return;
+        }
+        ws.send(blob);
+      }, "image/jpeg", 0.8);
+    };
 
     const connect = () => {
       if (!alive) return;
       setWsState("connecting");
       ws = new WebSocket(streamUrl());
       ws.binaryType = "blob";
-
-      ws.onopen = () => alive && setWsState("open");
-
-      ws.onmessage = (e) => {
+      ws.onopen = () => {
         if (!alive) return;
-
-        // Text frame → stats / status JSON.
-        if (typeof e.data === "string") {
+        setWsState("open");
+        scheduleFrame();
+      };
+      ws.onmessage = (event) => {
+        if (!alive) return;
+        if (typeof event.data === "string") {
           try {
-            const msg = JSON.parse(e.data);
-            if (msg.type === "stats") onStatsRef.current?.(msg);
+            const message = JSON.parse(event.data);
+            if (message.type === "stats") onStatsRef.current?.(message);
+            if (message.type === "error") setWsState("error");
           } catch {
-            /* malformed message — ignore */
+            // Ignore malformed control messages.
           }
           return;
         }
-
-        // Binary frame → one JPEG image.
-        const url = URL.createObjectURL(e.data);
-        const img = imgRef.current;
-        if (!img) {
-          URL.revokeObjectURL(url);
-          return;
-        }
-        const prev = lastUrl;
+        const url = URL.createObjectURL(event.data);
+        const previous = lastUrl;
         lastUrl = url;
-        img.src = url;
-        if (prev) setTimeout(() => URL.revokeObjectURL(prev), 300);
+        if (imgRef.current) imgRef.current.src = url;
+        else URL.revokeObjectURL(url);
+        if (previous) setTimeout(() => URL.revokeObjectURL(previous), 300);
+        sending = false;
+        scheduleFrame();
       };
-
-      ws.onerror = () => {
-        try {
-          ws.close();
-        } catch {
-          /* already closing */
-        }
-      };
-
+      ws.onerror = () => ws?.close();
       ws.onclose = () => {
+        sending = false;
         if (alive) {
           setWsState("closed");
-          retryTimer = setTimeout(connect, 1200); // auto-reconnect
+          retryTimer = setTimeout(connect, 1200);
         }
       };
     };
 
-    connect();
+    const start = async () => {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          audio: false,
+        });
+        if (!alive) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        const video = videoRef.current;
+        if (!video) throw new Error("Camera preview is unavailable.");
+        video.srcObject = mediaStream;
+        await video.play();
+        connect();
+      } catch {
+        if (alive) setWsState("camera-error");
+      }
+    };
 
+    start();
     return () => {
       alive = false;
       clearTimeout(retryTimer);
-      try {
-        if (ws) {
-          ws.onclose = null;
-          ws.close();
-        }
-      } catch {
-        /* noop */
-      }
+      clearTimeout(captureTimer);
+      try { ws?.close(); } catch { /* already closed */ }
+      mediaStream?.getTracks().forEach((track) => track.stop());
+      if (videoRef.current) videoRef.current.srcObject = null;
       if (lastUrl) URL.revokeObjectURL(lastUrl);
     };
   }, [enabled]);
 
-  return { imgRef, wsState };
+  return { videoRef, imgRef, wsState };
 }

@@ -28,8 +28,8 @@ export function AppProvider({ children }) {
 
   const [status, setStatus] = useState({
     running: false,
-    camera_index: 0,
-    capture_resolution: "",
+    camera_index: null,
+    capture_resolution: "browser",
     uptime_s: 0,
     error: null,
   });
@@ -78,13 +78,8 @@ export function AppProvider({ children }) {
     const t0 = Date.now();
     (async () => {
       try {
-        const [st, se, bt] = await Promise.all([
-          api.cameraStatus(),
-          api.getSettings(),
-          api.blurTypes(),
-        ]);
+        const [se, bt] = await Promise.all([api.getSettings(), api.blurTypes()]);
         if (!alive) return;
-        setStatus(st);
         setSettings(se);
         setBlurTypes(bt);
         setBackendUp(true);
@@ -124,8 +119,7 @@ export function AppProvider({ children }) {
     if (!status.running) return undefined;
     const t = setInterval(async () => {
       try {
-        const [st, s] = await Promise.all([api.cameraStatus(), api.stats()]);
-        setStatus(st);
+        const s = await api.stats();
         ingestStats(s);
         if (st.error && st.error !== lastCamError.current) {
           lastCamError.current = st.error;
@@ -142,10 +136,9 @@ export function AppProvider({ children }) {
   const startCamera = useCallback(async () => {
     setBusy(true);
     try {
-      const st = await api.startCamera();
-      setStatus(st);
+      setStatus((current) => ({ ...current, running: true, error: null }));
       lastCamError.current = null;
-      pushToast("success", "Camera started");
+      pushToast("info", "Requesting browser camera access");
     } catch (e) {
       pushToast("error", errorMessage(e));
     } finally {
@@ -156,8 +149,7 @@ export function AppProvider({ children }) {
   const stopCamera = useCallback(async () => {
     setBusy(true);
     try {
-      const st = await api.stopCamera();
-      setStatus(st);
+      setStatus((current) => ({ ...current, running: false, uptime_s: 0, error: null }));
       setStats(null);
       setFpsHistory([]);
       pushToast("info", "Camera stopped");

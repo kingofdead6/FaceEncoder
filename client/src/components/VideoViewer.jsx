@@ -22,7 +22,7 @@ function Corners() {
 
 export default function VideoViewer() {
   const { status, stats, settings, backendUp, ingestStats } = useApp();
-  const { imgRef, wsState } = useStream(status.running, ingestStats);
+  const { videoRef, imgRef, wsState } = useStream(status.running, ingestStats);
 
   const live = status.running && wsState === "open";
 
@@ -31,6 +31,7 @@ export default function VideoViewer() {
       <div className="relative aspect-video w-full bg-[#05070d]">
         {/* Stream target — always mounted while running so the ref exists
             before the first frame arrives. */}
+        {status.running && <video ref={videoRef} muted playsInline className="hidden" aria-hidden="true" />}
         {status.running && (
           <img
             ref={imgRef}

@@ -9,24 +9,6 @@ from pydantic import BaseModel, Field
 from app.vision.types import BlurType, Mode, Region
 
 
-class CameraStartRequest(BaseModel):
-    """Body for ``POST /api/camera/start``."""
-
-    camera_index: Optional[int] = Field(
-        default=None, ge=0, description="OS camera index; defaults to the configured one."
-    )
-
-
-class CameraStatusResponse(BaseModel):
-    """Lifecycle status of the camera subsystem."""
-
-    running: bool
-    camera_index: int
-    capture_resolution: str
-    uptime_s: float
-    error: Optional[str] = None
-
-
 class SettingsResponse(BaseModel):
     """Full current pipeline settings."""
 
@@ -80,4 +62,4 @@ class HealthResponse(BaseModel):
     status: str
     app: str
     version: str
-    camera_running: bool
+    stream_active: bool

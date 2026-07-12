@@ -32,12 +32,6 @@ export function streamUrl() {
  * ------------------------------------------------------------------ */
 export const api = {
   health: () => http.get("/api/health").then((r) => r.data),
-  cameraStatus: () => http.get("/api/camera/status").then((r) => r.data),
-  startCamera: (cameraIndex) =>
-    http
-      .post("/api/camera/start", cameraIndex != null ? { camera_index: cameraIndex } : {})
-      .then((r) => r.data),
-  stopCamera: () => http.post("/api/camera/stop").then((r) => r.data),
   getSettings: () => http.get("/api/settings").then((r) => r.data),
   updateSettings: (partial) => http.put("/api/settings", partial).then((r) => r.data),
   blurTypes: () => http.get("/api/settings/blur-types").then((r) => r.data),

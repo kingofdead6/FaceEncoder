@@ -16,8 +16,6 @@ services:
       - .env
     ports:
       - "8000:8000"
-    devices:
-      - /dev/video0:/dev/video0
     volumes:
       - ./backend/models:/app/models   # persist auto-downloaded model files
     restart: unless-stopped
