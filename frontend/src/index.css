@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (default) — toggled on <html> by the theme switch. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ *
+ *  Runtime theme variables — flipped by the .dark class              *
+ * ------------------------------------------------------------------ */
+:root {
+  --t-surface: #eef1f7;
+  --t-panel: #ffffff;
+  --t-panel2: #f6f8fc;
+  --t-edge: #d9dfeb;
+  --t-text: #131a2c;
+  --t-muted: #5c6780;
+  --t-glow: rgba(34, 211, 238, 0.22);
+}
+.dark {
+  --t-surface: #070b14;
+  --t-panel: #0d1322;
+  --t-panel2: #111a2e;
+  --t-edge: #1d2946;
+  --t-text: #e7ecf6;
+  --t-muted: #8b96b0;
+  --t-glow: rgba(34, 211, 238, 0.13);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Design tokens → Tailwind utilities                                *
+ * ------------------------------------------------------------------ */
+@theme inline {
+  --color-surface: var(--t-surface);
+  --color-panel: var(--t-panel);
+  --color-panel2: var(--t-panel2);
+  --color-edge: var(--t-edge);
+  --color-ink: var(--t-text);
+  --color-muted: var(--t-muted);
+
+  --color-signal: #22d3ee; /* signal cyan — live data, primary accent   */
+  --color-iris: #8b5cf6;   /* iris violet — secondary accent            */
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-danger: #f87171;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* ------------------------------------------------------------------ */
+body {
+  @apply bg-surface text-ink font-body antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, var(--t-glow), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(139, 92, 246, 0.1), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* Shared surfaces ---------------------------------------------------- */
+.panel {
+  @apply bg-panel border border-edge rounded-2xl shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_30px_rgba(2,6,18,0.25)];
+}
+.chip {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-edge bg-panel2 px-2.5 py-1 text-xs font-mono text-muted;
+}
+
+/* Buttons ------------------------------------------------------------ */
+.btn,
+.btn-primary,
+.btn-danger,
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+         transition-all duration-150 select-none cursor-pointer
+         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-primary {
+  @apply text-[#04121a] bg-signal hover:brightness-110 active:scale-[0.98]
+         shadow-[0_0_0_1px_rgba(34,211,238,0.4),0_8px_24px_rgba(34,211,238,0.25)];
+}
+.btn-danger {
+  @apply text-white bg-danger/90 hover:bg-danger active:scale-[0.98]
+         shadow-[0_0_0_1px_rgba(248,113,113,0.35)];
+}
+.btn-ghost {
+  @apply border border-edge bg-panel2 text-ink hover:border-signal/50;
+}
+
+/* Segmented / selectable cards --------------------------------------- */
+.seg {
+  @apply rounded-xl border border-edge bg-panel2 px-3 py-2 text-sm text-muted cursor-pointer
+         transition-all duration-150 hover:border-signal/40 hover:text-ink
+         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal;
+}
+.seg-active {
+  @apply border-signal/70 text-ink bg-signal/10 shadow-[0_0_0_1px_rgba(34,211,238,0.25),0_0_18px_rgba(34,211,238,0.12)];
+}
+
+/* Strength slider ----------------------------------------------------- */
+input[type="range"].vs-range {
+  @apply w-full h-1.5 rounded-full appearance-none cursor-pointer bg-edge;
+  background-image: linear-gradient(90deg, #22d3ee, #8b5cf6);
+  background-repeat: no-repeat;
+}
+input[type="range"].vs-range::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 rounded-full bg-white border-2 border-signal;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2);
+}
+input[type="range"].vs-range::-moz-range-thumb {
+  @apply w-4 h-4 rounded-full bg-white border-2 border-signal;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Signature element: the viewfinder                                 *
+ * ------------------------------------------------------------------ */
+.viewfinder-corner {
+  @apply absolute w-7 h-7 border-signal/80 pointer-events-none;
+}
+.scanline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.07) 48%, rgba(34, 211, 238, 0.14) 50%, rgba(34, 211, 238, 0.07) 52%, transparent 100%);
+  background-size: 100% 240px;
+  background-repeat: no-repeat;
+  animation: scan 3.6s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes scan {
+  0% { background-position: 0 -240px; }
+  100% { background-position: 0 calc(100% + 240px); }
+}
+
+/* Live pulse dot ------------------------------------------------------ */
+.pulse-dot { position: relative; }
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  opacity: 0.6;
+  animation: pulse-ring 1.6s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  80%, 100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Loading iris --------------------------------------------------------- */
+.iris-ring {
+  animation: iris-spin 1.4s linear infinite;
+  transform-origin: center;
+}
+@keyframes iris-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Toast entrance ------------------------------------------------------- */
+.toast-in { animation: toast-in 0.22s ease-out; }
+@keyframes toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Page fade ------------------------------------------------------------ */
+.fade-in { animation: fade-in 0.35s ease-out; }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Accessibility: kill decorative motion on request --------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .scanline, .pulse-dot::after, .iris-ring { animation: none; }
+  .fade-in, .toast-in { animation: none; }
+}

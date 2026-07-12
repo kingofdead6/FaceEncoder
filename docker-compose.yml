@@ -1,0 +1,32 @@
+# VisionShield — full stack.
+#
+#   docker compose up --build
+#   Frontend:  http://localhost:3000
+#   Backend:   http://localhost:8000  (Swagger at /docs)
+#
+# Webcam note: the devices mapping below works on Linux hosts. Docker
+# Desktop on macOS/Windows cannot pass webcams into containers — on those
+# platforms run the backend natively (see README) and containerise only
+# the frontend if you wish.
+services:
+  backend:
+    build: ./backend
+    container_name: visionshield-backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    devices:
+      - /dev/video0:/dev/video0
+    volumes:
+      - ./backend/models:/app/models   # persist auto-downloaded model files
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: visionshield-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
