@@ -36,9 +36,7 @@ export default function Navbar() {
           <NavLink to="/" end className={linkClass}>
             Dashboard
           </NavLink>
-          <NavLink to="/api-docs" className={linkClass}>
-            API docs
-          </NavLink>
+      
         </nav>
 
         <div className="ml-auto flex items-center gap-2.5">

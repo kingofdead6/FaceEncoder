@@ -18,7 +18,6 @@ export default function App() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/api-docs" element={<ApiDocs />} />
         </Routes>
       </main>
       <footer className="border-t border-edge px-4 py-4 text-center font-mono text-[11px] text-muted">
