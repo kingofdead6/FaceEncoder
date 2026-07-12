@@ -75,6 +75,14 @@ export default function VideoViewer() {
           </div>
         )}
 
+        {status.running && wsState === "error" && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#05070d]/85 p-6 text-center">
+            <p className="max-w-sm text-sm text-danger">
+              Backend processing failed. Check the backend logs for the missing dependency or model error.
+            </p>
+          </div>
+        )}
+
         {/* Viewfinder chrome */}
         <Corners />
         {live && <div className="scanline" aria-hidden="true" />}

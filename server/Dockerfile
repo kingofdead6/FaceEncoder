@@ -1,6 +1,5 @@
 # ── VisionShield backend ─────────────────────────────────────────────
-# python:3.11-slim keeps the image small; libgl1 + libglib2.0-0 are the
-# only system libraries OpenCV needs at runtime.
+# MediaPipe also needs libGLESv2 to load its native vision bindings.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -8,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && apt-get install -y --no-install-recommends libgl1 libgles2 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
