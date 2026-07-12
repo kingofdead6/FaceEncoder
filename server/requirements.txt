@@ -7,6 +7,6 @@ python-multipart>=0.0.9
 python-dotenv>=1.0
 
 # --- Computer vision -----------------------------------------------------
-opencv-python>=4.10          # swap for opencv-python-headless on servers
+opencv-python-headless>=4.10   # headless build: no X11/GUI deps, safe for servers/Docker
 mediapipe>=0.10.14
 numpy>=1.26

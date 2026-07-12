@@ -5,3 +5,12 @@ services:
     dockerContext: ./server
     dockerfilePath: ./server/Dockerfile
     healthCheckPath: /api/health
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://visionshield-chi.vercel.app
+      - key: LOG_LEVEL
+        value: INFO
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
