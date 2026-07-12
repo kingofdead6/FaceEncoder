@@ -244,9 +244,3 @@ Because each frame is a full round trip (browser → server → browser), percei
 MIT License — Copyright © 2026 **Youcef** — **SoftWebElevation**. See [`LICENSE`](LICENSE).
 
 ---
-
-<div align="center">
-
-Made with ❤️ using AI + Computer Vision
-
-</div>
